@@ -1,0 +1,35 @@
+REPO?=<<REPOSITORY>>
+WSAPI_IMAGE=wsapi
+SNOWFLAKE_COMPUTE_POOL?=<<COMPUTE_POOL>>
+WAREHOUSE=<<WAREHOUSE>>
+
+help:   ## Show this help.
+	@fgrep -h "##" $(MAKEFILE_LIST) | fgrep -v fgrep | sed -e 's/\\$$//' | sed -e 's/##//'
+
+build_local:   ## Build Docker images for local environment
+	docker compose build
+
+run:    ## Run local Docker images - make sure to set environment variables properly
+	docker compose up
+
+
+all: build push
+
+login:  ## Login to Snowflake Docker repo
+	docker login $(REPO)
+
+build:  ## Build Docker image for API for Snowpark Container Services
+	docker build --platform linux/amd64 -t $(WSAPI_IMAGE) . 
+
+push:   ## Push API Docker image to Snowpark Container Services
+	docker tag $(WSAPI_IMAGE) $(REPO)/$(WSAPI_IMAGE)
+	docker push $(REPO)/$(WSAPI_IMAGE)
+
+ddl:    ## Prints DDL statement for Service
+	@printf "CREATE SERVICE wsapi\n"
+	@printf "  IN COMPUTE POOL $(SNOWFLAKE_COMPUTE_POOL)\n"
+	@printf "  FROM SPECIFICATION \$$\$$\n"
+	@cat wsapi.yaml
+	@printf "\n  \$$\$$\n"
+	@printf "  QUERY_WAREHOUSE='$(WAREHOUSE)'\n"
+	@printf ";\n"

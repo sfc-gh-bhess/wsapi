@@ -1,0 +1,7 @@
+spec:
+  containers:
+    - name: wsapi
+      image: <<REPOSITORY>>/wsapi
+  endpoints:
+    - name: wsapi
+      port: 8080
